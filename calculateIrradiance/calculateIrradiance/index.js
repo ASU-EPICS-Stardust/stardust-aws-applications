@@ -2,7 +2,7 @@ const AWS = require('aws-sdk')
 const got = require('got')
 
 /**
- * Takes in an event object with a lat and a lon and goes and finds the irradiance for tht location.
+ * Takes in an event object with a lat and a lon and goes and finds the irradiance for that location.
  * @param event
  * @param context
  * @returns {Promise<{}>}
