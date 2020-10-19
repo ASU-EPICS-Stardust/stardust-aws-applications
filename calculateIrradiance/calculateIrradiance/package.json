@@ -1,0 +1,8 @@
+{
+  "name": "calculateIrradiance",
+  "version": "1.0.0",
+  "dependencies": {
+    "aws-sdk": "^2.773.0",
+    "got": "~11.7.0"
+  }
+}

@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Fetches an estimated irradiance value for a given location
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  IrradianceFunc:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: calculateIrradiance/
+      Handler: index.handler
+      Runtime: nodejs12.x
+
+Outputs:
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  IrradianceFunc:
+    Description: "Calculate Irradiance Lambda Function ARN"
+    Value: !GetAtt IrradianceFunc.Arn
+  IrradianceFuncIAMRole:
+    Description: "Implicit IAM Role created for Calculate Irradiance function"
+    Value: !GetAtt IrradianceFuncRole.Arn
+
