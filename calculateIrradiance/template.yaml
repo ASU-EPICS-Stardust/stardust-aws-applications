@@ -15,6 +15,12 @@ Resources:
       CodeUri: calculateIrradiance/
       Handler: index.handler
       Runtime: nodejs12.x
+  DegradationFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: calculatePVDegradation/
+      Handler: index.handler
+      Runtime: nodejs12.x
 
 Outputs:
   # Find out more about other implicit resources you can reference within SAM
@@ -25,4 +31,7 @@ Outputs:
   IrradianceFuncIAMRole:
     Description: "Implicit IAM Role created for Calculate Irradiance function"
     Value: !GetAtt IrradianceFuncRole.Arn
+  DegradationFun:
+    Description: "Calculate Degradation Lambda Function ARN"
+    Value: !GetAtt DegradationFunc.Arn
 
