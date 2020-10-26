@@ -29,7 +29,7 @@ exports.handler = async function(event, context) {
 
     const response = await got.post("http://api.weatherbit.io/v2.0/current", options);
 
-    console.info("Response: " + JSON.stringify(response.body, null, 2));
+    // console.info("Response: " + JSON.stringify(response.body, null, 2));
 
     // Check the count of observations returned
     let count = response.body.count;

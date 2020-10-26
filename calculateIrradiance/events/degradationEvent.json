@@ -1,5 +1,5 @@
 {
-  "panelIrradiance": 1000,
+  "currentIrradiance": 1000,
   "pMax": 295,
   "pOut": 200,
   "stdIrradiance": 1000
