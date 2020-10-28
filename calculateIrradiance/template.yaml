@@ -9,18 +9,85 @@ Globals:
     Timeout: 3
 
 Resources:
+  IrradianceFuncIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+      Description: >
+        The role that the IrradianceFunc Lambda Function will assume to allow execution and access to the dynamo table
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoCachingTableAccess
+          PolicyDocument: {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "Stmt1603872726428",
+                "Action": [
+                    "dynamodb:DeleteItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:UpdateItem"
+                ],
+                "Effect": "Allow",
+                "Resource": !GetAtt IrradianceCachingDynamoDBTable.Arn
+              }
+            ]
+          }
+      RoleName: Stardust-IrradianceCalc-Role
   IrradianceFunc:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: calculateIrradiance/
       Handler: index.handler
       Runtime: nodejs12.x
+      Role: !GetAtt IrradianceFuncIAMRole.Arn
   DegradationFunc:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: calculatePVDegradation/
       Handler: index.handler
       Runtime: nodejs12.x
+  IrradianceCachingDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: LatLon
+          AttributeType: S
+#        - AttributeName: "RequestedLat"
+#          AttributeType: N
+#        - AttributeName: "RequestedLon"
+#          AttributeType: N
+#        - AttributeName: Source
+#          AttributeType: S
+#        - AttributeName: "CachedResponse"
+#          AttributeType: M
+#        - AttributeName: RequestDate
+#          AttributeType: N
+#        - AttributeName: ExpDate
+#          AttributeType: N
+      KeySchema:
+        - AttributeName: LatLon
+          KeyType: HASH
+      TableName: "IrradianceRequestsCache"
+      TimeToLiveSpecification:
+        AttributeName: ExpDate
+        Enabled: true
+
 
 Outputs:
   # Find out more about other implicit resources you can reference within SAM
@@ -28,9 +95,6 @@ Outputs:
   IrradianceFunc:
     Description: "Calculate Irradiance Lambda Function ARN"
     Value: !GetAtt IrradianceFunc.Arn
-  IrradianceFuncIAMRole:
-    Description: "Implicit IAM Role created for Calculate Irradiance function"
-    Value: !GetAtt IrradianceFuncRole.Arn
   DegradationFun:
     Description: "Calculate Degradation Lambda Function ARN"
     Value: !GetAtt DegradationFunc.Arn

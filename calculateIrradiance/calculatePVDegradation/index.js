@@ -14,6 +14,10 @@ exports.handler = async function(event, context) {
     const p_out = event['pOut'];
     let e_std = event['stdIrradiance'];
 
+    if (e_now === undefined || p_max === undefined || p_out === undefined) {
+        throw "Invalid Event Object";
+    }
+
     if (e_std === undefined || e_std == null) {
         e_std = 1000;
     }
