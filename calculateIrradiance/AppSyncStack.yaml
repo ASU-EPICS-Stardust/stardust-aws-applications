@@ -1,0 +1,170 @@
+Parameters:
+  AppSyncAPILoggingLevel:
+    Type: String
+    Description: The logging level for the GraphQL AppSync API.
+    AllowedValues:
+      - NONE
+      - ERROR
+      - ALL
+  AppSyncLoggingExcludeVerbose:
+    Type: String
+    Description: Whether or not to exclude verbose content from the AppSync logs
+  UserPoolStack:
+    Type: String
+    Description: "The name of the stack that creates a User Pool of which to use for auth here. This stack must export
+      a value named \"{StackName}-UserPoolID\""
+  IrradianceCalcLambdaFunctionArn:
+    Description: >
+      The ARN of a lambda function to calculate irradiance. Takes in a lat and a lon and returns a ghi
+      irradiance measurement.
+    Type: String
+  DegradationCalcLambdaFunctionArn:
+    Description: >
+      The ARN of a lambda function to calculate PV panel degradation. Takes in Panel Info and returns a degradation
+      measurement.
+    Type: String
+  RandomID:
+    Type: String
+    Description: >
+      A short, random id used to keep these elements separate from other stack elements.
+
+
+Resources:
+  AppSyncCloudWatchLogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "appsync.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+      Description: The role to allow appsync to publish log events
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+      RoleName: !Sub "appsync-publish-logs-${RandomID}"
+  AppSyncAPI:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncCloudWatchLogsRole.Arn
+        ExcludeVerboseContent: !Ref AppSyncLoggingExcludeVerbose
+        FieldLogLevel: !Ref AppSyncAPILoggingLevel
+      Name: !Join
+        - ''
+        - - "PV-Degradation-API-"
+          - !Ref RandomID
+      UserPoolConfig:
+        AwsRegion: "us-east-2"
+        DefaultAction: DENY
+        UserPoolId:
+          Fn::ImportValue: !Sub "${UserPoolStack}-UserPoolID"
+      XrayEnabled: No
+  AppSyncGraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      DefinitionS3Location: ./AppSyncConfig/schema.graphql
+
+  ## Data Sources
+  AppSyncIrradianceFuncDataSourceServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Description: "Allows the AppSync API to call the lambda calc function"
+      Policies:
+        - PolicyName: ExecuteIrradianceCalcLambda
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              Effect: Allow
+              Action:
+                - lambda:invokeFunction
+              Resource:
+                - !Ref IrradianceCalcLambdaFunctionArn
+      RoleName: !Sub "appsync-execute-irradianceCalc-${RandomID}"
+  AppSyncIrradianceFuncDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      Description: The Irradiance calculation Lambda function data source.
+      LambdaConfig:
+        LambdaFunctionArn: !Ref IrradianceCalcLambdaFunctionArn
+      Name: "IrradianceCalcFunctionSource"
+      ServiceRoleArn: !GetAtt AppSyncIrradianceFuncDataSourceServiceRole.Arn
+      Type: AWS_LAMBDA
+  AppSyncDegradationCalcFuncDataSourceServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Description: "Allows the AppSync API to call the lambda degradation function"
+      Policies:
+        - PolicyName: ExecuteDegradationCalcLambda
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              Effect: Allow
+              Action:
+                - lambda:invokeFunction
+              Resource:
+                - !Ref DegradationCalcLambdaFunctionArn
+      RoleName: !Sub "appsync-execute-degradationCalc-${RandomID}"
+  AppSyncDegradationCalcFuncDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      Description: The Degradation calculation Lambda function data source.
+      LambdaConfig:
+        LambdaFunctionArn: !Ref DegradationCalcLambdaFunctionArn
+      Name: "DegradationCalcFunctionSource"
+      ServiceRoleArn: !GetAtt AppSyncDegradationCalcFuncDataSourceServiceRole.Arn
+      Type: AWS_LAMBDA
+
+  ## Resolvers
+  AppSyncGetIrradianceDataResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      DataSourceName: !GetAtt AppSyncIrradianceFuncDataSource.Name
+      FieldName: getIrradianceDataFor
+      Kind: UNIT
+      RequestMappingTemplateS3Location: ./AppSyncConfig/GetIrradianceDataRequestResolver.vtl
+      ResponseMappingTemplateS3Location: ./AppSyncConfig/GetIrradianceDataResponseResolver.vtl
+      TypeName: Query
+  AppSyncCalcDegradationResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      DataSourceName: !GetAtt AppSyncDegradationCalcFuncDataSource.Name
+      FieldName: calculateDegradation
+      Kind: UNIT
+      RequestMappingTemplateS3Location: ./AppSyncConfig/CalculateDegradationRequestResolver.vtl
+      ResponseMappingTemplateS3Location: ./AppSyncConfig/CalculateDegradationResponseResolver.vtl
+      TypeName: Query
+
+Outputs:
+  AppSyncGraphQLURL:
+    Description: The URL for the GraphQL API
+    Value: !GetAtt AppSyncAPI.GraphQLUrl
+  AppSyncApiId:
+    Description: The API ID for the AppSync API
+    Value: !GetAtt AppSyncAPI.ApiId

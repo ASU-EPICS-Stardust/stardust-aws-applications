@@ -1,7 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Fetches an estimated irradiance value for a given location
+  Sets up the application stack for our hosted serverless PV Degradation Calculator
+
+Parameters:
+  AppSyncAPILoggingLevel:
+    Type: String
+    Description: The logging level for the GraphQL AppSync API.
+    AllowedValues:
+      - NONE
+      - ERROR
+      - ALL
+  UserPoolStackName:
+    Type: String
+    Description: "The name of the stack that creates a User Pool of which to use for auth here. This stack must export
+        a value named \"{StackName}-UserPoolID\""
+
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -47,7 +61,7 @@ Resources:
               }
             ]
           }
-      RoleName: Stardust-IrradianceCalc-Role
+      RoleName: !Sub "${AWS::StackName}-lambda-irradianceCalc"
   IrradianceFunc:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -68,26 +82,31 @@ Resources:
       AttributeDefinitions:
         - AttributeName: LatLon
           AttributeType: S
-#        - AttributeName: "RequestedLat"
-#          AttributeType: N
-#        - AttributeName: "RequestedLon"
-#          AttributeType: N
-#        - AttributeName: Source
-#          AttributeType: S
-#        - AttributeName: "CachedResponse"
-#          AttributeType: M
-#        - AttributeName: RequestDate
-#          AttributeType: N
-#        - AttributeName: ExpDate
-#          AttributeType: N
       KeySchema:
         - AttributeName: LatLon
           KeyType: HASH
-      TableName: "IrradianceRequestsCache"
+      TableName: !Sub "${AWS::StackName}-IrradianceRequestsCache"
       TimeToLiveSpecification:
         AttributeName: ExpDate
         Enabled: true
-
+  AppSyncAPIStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        AppSyncAPILoggingLevel: !Ref AppSyncAPILoggingLevel
+        AppSyncLoggingExcludeVerbose: True
+        UserPoolStack: !Ref UserPoolStackName
+        IrradianceCalcLambdaFunctionArn: !GetAtt IrradianceFunc.Arn
+        DegradationCalcLambdaFunctionArn: !GetAtt DegradationFunc.Arn
+        RandomID:
+          'Fn::Transform':
+            Name: "String"
+            Parameters:
+              InputString: ""
+              Operation: RandomID
+              Length: 6
+      TemplateURL: ./AppSyncStack.yaml
+      TimeoutInMinutes: 10
 
 Outputs:
   # Find out more about other implicit resources you can reference within SAM
@@ -98,4 +117,10 @@ Outputs:
   DegradationFun:
     Description: "Calculate Degradation Lambda Function ARN"
     Value: !GetAtt DegradationFunc.Arn
+  AppSyncGraphQLURL:
+    Description: The URL for the GraphQL API
+    Value: !GetAtt AppSyncAPIStack.Outputs.AppSyncGraphQLURL
+  AppSyncApiId:
+    Description: The API ID for the AppSync API
+    Value: !GetAtt AppSyncAPIStack.Outputs.AppSyncApiId
 

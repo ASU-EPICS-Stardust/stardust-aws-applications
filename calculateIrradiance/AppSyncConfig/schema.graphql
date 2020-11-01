@@ -1,0 +1,28 @@
+input PanelInformation {
+	modelName: String
+	modelNumber: String
+	pOut: Float!
+	pMax: Float!
+	operationalEfficiency: Float
+	currentIrradiance: Float!
+	stdIrradiance: Float
+	weatherStatus: WeatherStatus
+	testTime: AWSTimestamp!
+	testLat: Float!
+	testLon: Float!
+}
+
+type Query {
+	# Get a single value of type 'Post' by primary key.
+	getIrradianceDataFor(lat: Float, lon: Float): Float
+	calculateDegradation(panelInfo: PanelInformation): Float
+}
+
+input WeatherStatus {
+	sunny: Int!
+	overcast: Int!
+}
+
+schema {
+	query: Query
+}

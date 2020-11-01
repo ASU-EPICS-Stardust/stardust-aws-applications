@@ -1,0 +1,213 @@
+Parameters:
+  SignInDomain:
+    Type: String
+    Description: The domain to prepend to the standard sign in url for the user pool
+
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: False
+#        InviteMessageTemplate:
+#          EmailMessage: >
+#            Welcome to the ASU EPICS Team's PV Panel Degradation Calculator! You have been made an account with a username: "{username}" and a temporary password: "{####}".
+#            Feel free to reach out with any questions or concerns.
+#          EmailSubject: PV Panel Degradation Calculator
+#          SMSMessage: >
+#            Welcome to the ASU EPICS Team's PV Panel Degradation Calculator! You have been made an account with a username: "{username}" and a temporary password: "{####}".
+#            Feel free to reach out with any questions or concerns.
+#      AliasAttributes:
+#        - email
+#        - phone_number
+      AutoVerifiedAttributes:
+        - email
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: True
+        DeviceOnlyRememberedOnUserPrompt: False
+      EmailConfiguration:
+#        ConfigurationSet: String
+        EmailSendingAccount: COGNITO_DEFAULT
+#        From: ASU Stardust EPICS Team <asu.epics.stardust.team@gmail.com>
+        ReplyToEmailAddress: asu.epics.stardust.team@gmail.com
+#        SourceArn: String
+#      EmailVerificationMessage: String
+#      EmailVerificationSubject: String
+#      EnabledMfas:
+#        - SMS_MFA
+#      LambdaConfig:
+#        LambdaConfig
+#      MfaConfiguration: OPTIONAL
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 60
+      Schema:
+        - AttributeDataType: String
+          Mutable: false
+          Name: "email"
+          Required: true
+        - AttributeDataType: String
+          Mutable: True
+          Name: "name"
+          Required: True
+          StringAttributeConstraints:
+            MaxLength: 20
+            MinLength: 2
+      SmsAuthenticationMessage: >
+        This is your temporary sign in token for the PV Degradation Calculator: {####}.
+#      SmsConfiguration:
+#        SmsConfiguration
+#      SmsVerificationMessage: String
+      UsernameAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: False
+      UserPoolName: !Join
+        - '-'
+        - - "PV-Degradation-UserPool"
+          - !Ref "AWS::StackName"
+      UserPoolTags: {
+        "environment":"Development"
+      }
+#      VerificationMessageTemplate:
+#        VerificationMessageTemplate
+  UserPoolDomain: # TODO: Once we get a custom domain, set up the user pool to use it
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+#      CustomDomainConfig:
+#        CertificateArn: String
+      Domain: !Ref SignInDomain
+      UserPoolId: !Ref CognitoUserPool
+#  UserPoolGoogleIdentityProvider: # TODO: To add 3rd party identity providers we will need to set up accounts on their services (i.e. Google, Apple, Facebook), which is more overhead. Need to thoroughly document that out if it happens.
+#    Type: AWS::Cognito::UserPoolIdentityProvider
+#    Properties:
+#      AttributeMapping: Json
+#      IdpIdentifiers:
+#        - String
+#      ProviderDetails: Json
+#      ProviderName: String
+#      ProviderType: String
+#      UserPoolId: String
+  UserPoolAppSyncTestingClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 10
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - openid
+#      AnalyticsConfiguration: # TODO: Insert Pinpoint Configuration
+#        ApplicationId: String
+#        ExternalId: String
+#        RoleArn: String
+#        UserDataShared: Boolean
+      CallbackURLs:
+        - "http://localhost"
+      ClientName: "AppSync Testing Client"
+#      DefaultRedirectURI: String
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 20
+#      LogoutURLs: # Where to redirect after logout
+#        - String
+      PreventUserExistenceErrors: ENABLED
+      ReadAttributes:
+        - phone_number
+        - email
+        - name
+      RefreshTokenValidity: 15 # In Days
+      SupportedIdentityProviders:
+        - COGNITO
+      UserPoolId: !Ref CognitoUserPool
+      WriteAttributes: []
+  UserPoolWebsiteClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 10
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - openid
+        - phone
+        - email
+        - profile
+        - aws.cognito.signin.user.admin
+#      AnalyticsConfiguration: # TODO: Insert Pinpoint Configuration
+#        ApplicationId: String
+#        ExternalId: String
+#        RoleArn: String
+#        UserDataShared: Boolean
+      CallbackURLs:
+        - "http://localhost"
+      ClientName: "Website Client"
+#      DefaultRedirectURI: String
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 20
+#      LogoutURLs:
+#        - String
+      PreventUserExistenceErrors: ENABLED
+      ReadAttributes:
+        - email
+        - phone_number
+        - name
+      RefreshTokenValidity: 120 # In days
+      SupportedIdentityProviders:
+        - COGNITO
+      UserPoolId: !Ref CognitoUserPool
+      WriteAttributes:
+        - email
+        - name
+
+
+# TODO: Add SES Config
+
+Outputs:
+  CognitoUserPoolArn:
+    Description: The ARN for the user pool for users of the PV Degradation Calculator
+    Value: !GetAtt CognitoUserPool.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolARN"
+  CognitoUserPoolProviderURL:
+    Description: The User Pool's provider URL
+    Value: !GetAtt CognitoUserPool.ProviderURL
+  CognitoUserPoolProviderName:
+    Description: The User Pool's provider Name
+    Value: !GetAtt CognitoUserPool.ProviderName
+  CognitoUserPoolAppSyncTestingClientID:
+    Description: The Cognito User Pool Client for AppSync Testing
+    Value: !Ref UserPoolAppSyncTestingClient
+  CognitoUserPoolWebsiteClient:
+    Description: The Cognito User Pool Client for the Website
+    Value: !Ref UserPoolWebsiteClient
+  UserPoolDomain:
+    Description: The Cognito User Pool Domain
+    Value: !Join
+      - ""
+      - - !Ref UserPoolDomain
+        - ".auth.us-east-2.amazoncognito.com"
+  CognitoUserPoolID:
+    Description: The User Pool ID
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolID"
