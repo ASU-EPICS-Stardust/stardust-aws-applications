@@ -102,9 +102,10 @@ Resources:
           'Fn::Transform':
             Name: "String"
             Parameters:
-              InputString: ""
-              Operation: RandomID
-              Length: 6
+              InputString: !Ref "AWS::StackName"
+              Operation: MaxLength
+              Length: 15
+              StripFrom: Left
       TemplateURL: ./AppSyncStack.yaml
       TimeoutInMinutes: 10
 

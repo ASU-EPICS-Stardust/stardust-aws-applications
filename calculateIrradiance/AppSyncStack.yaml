@@ -27,6 +27,7 @@ Parameters:
     Type: String
     Description: >
       A short, random id used to keep these elements separate from other stack elements.
+    MaxLength: 15
 
 
 Resources:
