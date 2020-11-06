@@ -7,7 +7,7 @@ s3_bucket = "stardust-cloudformation-templates"
 s3_prefix = ""
 region = "us-east-2"
 confirm_changeset = true
-capabilities = "CAPABILITY_NAMED_IAM"
+capabilities = "CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "AppSyncAPILoggingLevel=\"ERROR\" UserPoolStackName=\"UserPool-Dev\""
 
 [cognitostack]

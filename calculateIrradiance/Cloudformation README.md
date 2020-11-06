@@ -1,4 +1,4 @@
-The AWS Resource Stacks can be deployed using cloudformation through the [AWS CLI](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/deploy/index.html)
+The AWS Resource Stacks can be deployed using cloudformation through the [AWS CLI](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/deploy/index.html) or the SAM CLI. The SAM commands for each stack are given below.
 
 ## Serverless Resources (main template)
 The template.yaml file is a sam serverless template file and can be deployed using the same cli or toolkit plugin for

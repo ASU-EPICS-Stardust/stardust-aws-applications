@@ -69,6 +69,9 @@ Resources:
       Handler: index.handler
       Runtime: nodejs12.x
       Role: !GetAtt IrradianceFuncIAMRole.Arn
+      Environment:
+        Variables:
+          Caching_Table_Name: !Ref IrradianceCachingDynamoDBTable
   DegradationFunc:
     Type: AWS::Serverless::Function
     Properties:
@@ -98,14 +101,6 @@ Resources:
         UserPoolStack: !Ref UserPoolStackName
         IrradianceCalcLambdaFunctionArn: !GetAtt IrradianceFunc.Arn
         DegradationCalcLambdaFunctionArn: !GetAtt DegradationFunc.Arn
-        RandomID:
-          'Fn::Transform':
-            Name: "String"
-            Parameters:
-              InputString: !Ref "AWS::StackName"
-              Operation: MaxLength
-              Length: 15
-              StripFrom: Left
       TemplateURL: ./AppSyncStack.yaml
       TimeoutInMinutes: 10
 

@@ -23,11 +23,6 @@ Parameters:
       The ARN of a lambda function to calculate PV panel degradation. Takes in Panel Info and returns a degradation
       measurement.
     Type: String
-  RandomID:
-    Type: String
-    Description: >
-      A short, random id used to keep these elements separate from other stack elements.
-    MaxLength: 15
 
 
 Resources:
@@ -49,7 +44,16 @@ Resources:
       Description: The role to allow appsync to publish log events
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
-      RoleName: !Sub "appsync-publish-logs-${RandomID}"
+      RoleName: !Join
+        - ''
+        - - "appsync-publish-logs-"
+          - Fn::Transform:
+              Name: "String"
+              Parameters:
+                InputString: !Ref "AWS::StackName"
+                Operation: MaxLength
+                Length: 11
+                StripFrom: Left
   AppSyncAPI:
     Type: AWS::AppSync::GraphQLApi
     Properties:
@@ -61,10 +65,16 @@ Resources:
       Name: !Join
         - ''
         - - "PV-Degradation-API-"
-          - !Ref RandomID
+          - Fn::Transform:
+              Name: "String"
+              Parameters:
+                InputString: !Ref "AWS::StackName"
+                Operation: MaxLength
+                Length: 11
+                StripFrom: Left
       UserPoolConfig:
         AwsRegion: "us-east-2"
-        DefaultAction: DENY
+        DefaultAction: ALLOW
         UserPoolId:
           Fn::ImportValue: !Sub "${UserPoolStack}-UserPoolID"
       XrayEnabled: No
@@ -96,7 +106,10 @@ Resources:
                 - lambda:invokeFunction
               Resource:
                 - !Ref IrradianceCalcLambdaFunctionArn
-      RoleName: !Sub "appsync-execute-irradianceCalc-${RandomID}"
+      RoleName: !Join
+        - ''
+        - - "appsync-execute-irradianceCalc"
+          - !GetAtt AppSyncAPI.ApiId
   AppSyncIrradianceFuncDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -128,7 +141,10 @@ Resources:
                 - lambda:invokeFunction
               Resource:
                 - !Ref DegradationCalcLambdaFunctionArn
-      RoleName: !Sub "appsync-execute-degradationCalc-${RandomID}"
+      RoleName: !Join
+        - ''
+        - - "appsync-execute-degradationCalc-"
+          - !GetAtt AppSyncAPI.ApiId
   AppSyncDegradationCalcFuncDataSource:
     Type: AWS::AppSync::DataSource
     Properties:

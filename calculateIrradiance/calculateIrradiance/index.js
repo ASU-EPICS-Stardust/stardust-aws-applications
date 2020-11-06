@@ -23,9 +23,10 @@ exports.handler = async function(event, context) {
     // Requests will be cached with the lat/lon as the primary key to an accuracy of 2 decimal places
     // Cached items should not store the entire api response, but rather only the relevant irradiance params (at a minimum "ghi"). See below for the caching code.
     let dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    const tableName = process.env.Caching_Table_Name;
     let latLonCacheKey = "lat:" + Math.round(event["lat"] * 100) / 100 + "-lon:" + Math.round(event["lon"] * 100) / 100
     let getItemParams = {
-        TableName: "IrradianceRequestsCache",
+        TableName: tableName,
         Key: {
             "LatLon": {
                 "S": latLonCacheKey
@@ -102,7 +103,7 @@ exports.handler = async function(event, context) {
         };
 
         let putItemParams = {
-            TableName: "IrradianceRequestsCache",
+            TableName: tableName,
             Item: AWS.DynamoDB.Converter.marshall({ // Item object is the record to store in DynamoDB
                 "LatLon": latLonCacheKey,
                 "RequestedLat": event["lat"],
@@ -117,7 +118,7 @@ exports.handler = async function(event, context) {
         let putItemPromise = new Promise((resolve, reject) => {
             dynamodb.putItem(putItemParams, function (err, data) {
                 if (err) {
-                    console.log(err, err.stack);
+                    console.error(err, err.stack);
                     reject(err);
                 } else {
                     resolve(data);
