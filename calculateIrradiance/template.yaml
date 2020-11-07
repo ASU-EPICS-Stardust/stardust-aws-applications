@@ -42,6 +42,7 @@ Resources:
         The role that the IrradianceFunc Lambda Function will assume to allow execution and access to the dynamo table
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
       Policies:
         - PolicyName: DynamoCachingTableAccess
           PolicyDocument: {
@@ -78,6 +79,7 @@ Resources:
       CodeUri: calculatePVDegradation/
       Handler: index.handler
       Runtime: nodejs12.x
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
   IrradianceCachingDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -110,7 +112,7 @@ Outputs:
   IrradianceFunc:
     Description: "Calculate Irradiance Lambda Function ARN"
     Value: !GetAtt IrradianceFunc.Arn
-  DegradationFun:
+  DegradationFunc:
     Description: "Calculate Degradation Lambda Function ARN"
     Value: !GetAtt DegradationFunc.Arn
   AppSyncGraphQLURL:

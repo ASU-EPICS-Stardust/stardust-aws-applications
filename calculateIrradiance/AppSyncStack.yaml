@@ -42,6 +42,7 @@ Resources:
         ]
       }
       Description: The role to allow appsync to publish log events
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
       RoleName: !Join
@@ -93,9 +94,10 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: appsync.amazonaws.com
             Action: sts:AssumeRole
       Description: "Allows the AppSync API to call the lambda calc function"
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
       Policies:
         - PolicyName: ExecuteIrradianceCalcLambda
           PolicyDocument:
@@ -108,7 +110,7 @@ Resources:
                 - !Ref IrradianceCalcLambdaFunctionArn
       RoleName: !Join
         - ''
-        - - "appsync-execute-irradianceCalc"
+        - - "appsync-execute-irradianceCalc-"
           - !GetAtt AppSyncAPI.ApiId
   AppSyncIrradianceFuncDataSource:
     Type: AWS::AppSync::DataSource
@@ -128,9 +130,10 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: appsync.amazonaws.com
             Action: sts:AssumeRole
       Description: "Allows the AppSync API to call the lambda degradation function"
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
       Policies:
         - PolicyName: ExecuteDegradationCalcLambda
           PolicyDocument:

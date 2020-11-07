@@ -104,6 +104,7 @@ Resources:
     Properties:
       AccessTokenValidity: 10
       AllowedOAuthFlows:
+        - code
         - implicit
       AllowedOAuthFlowsUserPoolClient: True
       AllowedOAuthScopes:
@@ -162,7 +163,7 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
-      GenerateSecret: True
+      GenerateSecret: False
       IdTokenValidity: 20
 #      LogoutURLs:
 #        - String
