@@ -61,7 +61,7 @@ Resources:
                           response["fragment"] = input[:length]
                   elif operation == "RandomID":
                       length = int(event["params"]["Length"])
-                      letters = string.ascii_uppercase + string.digits
+                      letters = string.ascii_lowercase + string.digits
                       response["fragment"] = ''.join(random.choices(letters, k = length))
 
                   else:

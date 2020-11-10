@@ -1,10 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  CloudFrontS3BucketOriginID:
+    Type: String
+    Description: A specific ID to use when specifying the Origin that will connect the CloudFront Distribution to the
+      S3 bucket. Not required and can be any string you want that is a valid id. Mainly just listed as a parameter so
+      I can give it a default value.
+    Default: "S3Bucket"
+
 Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
 #      AnalyticsConfigurations:
 #        - AnalyticsConfiguration
-      BucketName: !Sub "{AWS::StackName}-Bucket"
+      BucketName: !Join
+        - ""
+        - - Fn::Transform:
+              Name: "String"
+              Parameters:
+                InputString: !Ref "AWS::StackName"
+                Operation: Lower
+          - "-bucket"
 #      LoggingConfiguration:
 #        LoggingConfiguration
 #      MetricsConfigurations:
@@ -21,14 +38,20 @@ Resources:
     Properties:
       Bucket: !Ref WebsiteBucket
       PolicyDocument:
-        Version: 2012-10-17
+        Version: "2012-10-17"
         Id: PolicyForCloudFrontOAI
         Statement:
           - Effect: Allow
             Principal:
-              CanoncialUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
-            Action: "s3:GetObject"
-            Resource: !GetAtt WebsiteBucket.Arn
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action:
+              - "s3:GetObject"
+            Resource:
+              - !GetAtt WebsiteBucket.Arn
+              - Fn::Join:
+                  - ""
+                  - - !GetAtt WebsiteBucket.Arn
+                    - "/*"
 
   CloudFrontOAI:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
@@ -39,6 +62,8 @@ Resources:
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - BucketPolicy
     Properties:
       DistributionConfig:
         # Add CNAMES here if we ever get a domain
@@ -49,8 +74,22 @@ Resources:
         Comment: !Sub "Distribution to serve content from {WebsiteBucket}"
 #        CustomErrorResponses:
 #          - CustomErrorResponse
-#        DefaultCacheBehavior:
-#          DefaultCacheBehavior
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+#          CachePolicyId: String
+          Compress: true
+#          FieldLevelEncryptionId: String
+          ForwardedValues:
+            QueryString: true
+#          OriginRequestPolicyId: String
+#          RealtimeLogConfigArn: String
+          TargetOriginId: !Ref CloudFrontS3BucketOriginID
+          ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: "index.html"
         Enabled: true
         HttpVersion: http2
@@ -60,13 +99,18 @@ Resources:
 #        OriginGroups:
 #          OriginGroups
         Origins:
+          -
 #          - ConnectionAttempts: Integer
 #            ConnectionTimeout: Integer
             DomainName: !GetAtt WebsiteBucket.DomainName
-            Id: "S3Bucket"
+            Id: !Ref CloudFrontS3BucketOriginID
 #            OriginPath: String
             S3OriginConfig:
-              OriginAccessIdentity: !Ref CloudFrontOAI
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ""
+                  - - "origin-access-identity/cloudfront/"
+                    - !Ref CloudFrontOAI
         PriceClass: PriceClass_100
 #        Restrictions:
 #          Restrictions
@@ -77,6 +121,12 @@ Resources:
 #        - Tag
 
 Outputs:
-  CloudFrontUrl:
+  CloudFrontWebsiteUrl:
     Description: The URL for the cloud front ditribution.
     Value: !GetAtt CloudFrontDistribution.DomainName
+  S3BucketName:
+    Description: The name of the S3 bucket to store the website files in.
+    Value: !Ref WebsiteBucket
+  CloudFrontOriginAccessIdentity:
+    Description: The Origin Access Identity for the S3 bucket and CloudFront distro.
+    Value: !Ref CloudFrontOAI
