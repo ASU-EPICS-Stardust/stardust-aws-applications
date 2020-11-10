@@ -15,6 +15,7 @@ input PanelInformation {
 type Query {
 	# Get a single value of type 'Post' by primary key.
 	getIrradianceDataFor(lat: Float, lon: Float): Float
+	getAprsIrradianceFor(lat: Float, lon: Float): Float
 	calculateDegradation(panelInfo: PanelInformation): Float
 }
 

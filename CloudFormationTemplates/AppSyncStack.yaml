@@ -20,6 +20,11 @@ Parameters:
       The ARN of a lambda function to calculate irradiance. Takes in a lat and a lon and returns a ghi
       irradiance measurement.
     Type: String
+  AprsIrradianceCalcLambdaFunctionArn:
+    Description: >
+      The ARN of a lambda function to calculate APRS irradiance. Takes in a lat and a lon and returns a ghi
+      irradiance measurement.
+    Type: String
   DegradationCalcLambdaFunctionArn:
     Description: >
       The ARN of a lambda function to calculate PV panel degradation. Takes in Panel Info and returns a degradation
@@ -124,6 +129,42 @@ Resources:
       Name: "IrradianceCalcFunctionSource"
       ServiceRoleArn: !GetAtt AppSyncIrradianceFuncDataSourceServiceRole.Arn
       Type: AWS_LAMBDA
+  AppSyncAprsIrradianceFuncDataSourceServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Description: "Allows the AppSync API to call the APRS lambda calc function"
+      PermissionsBoundary: "arn:aws:iam::502015339777:policy/StardustDevBoundary"
+      Policies:
+        - PolicyName: ExecuteAprsIrradianceCalcLambda
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              Effect: Allow
+              Action:
+                - lambda:invokeFunction
+              Resource:
+                - !Ref AprsIrradianceCalcLambdaFunctionArn
+      RoleName: !Join
+        - ''
+        - - "appsync-execute-aprsIrradianceCalc-"
+          - !GetAtt AppSyncAPI.ApiId
+  AppSyncAprsIrradianceFuncDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      Description: The APRS Irradiance calculation Lambda function data source.
+      LambdaConfig:
+        LambdaFunctionArn: !Ref AprsIrradianceCalcLambdaFunctionArn
+      Name: "AprsIrradianceCalcFunctionSource"
+      ServiceRoleArn: !GetAtt AppSyncAprsIrradianceFuncDataSourceServiceRole.Arn
+      Type: AWS_LAMBDA
   AppSyncDegradationCalcFuncDataSourceServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -171,6 +212,16 @@ Resources:
       Kind: UNIT
       RequestMappingTemplateS3Location: ../AppSyncConfig/GetIrradianceDataRequestResolver.vtl
       ResponseMappingTemplateS3Location: ../AppSyncConfig/GetIrradianceDataResponseResolver.vtl
+      TypeName: Query
+  AppSyncGetAprsIrradianceResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncAPI.ApiId
+      DataSourceName: !GetAtt AppSyncAprsIrradianceFuncDataSource.Name
+      FieldName: getAprsIrradianceFor
+      Kind: UNIT
+      RequestMappingTemplateS3Location: ../AppSyncConfig/getAprsIrradianceForRequestResolver.vtl
+      ResponseMappingTemplateS3Location: ../AppSyncConfig/getAprsIrradianceForResponseResolver.vtl
       TypeName: Query
   AppSyncCalcDegradationResolver:
     Type: AWS::AppSync::Resolver

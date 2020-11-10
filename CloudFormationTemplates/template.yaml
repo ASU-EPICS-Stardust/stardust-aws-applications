@@ -113,6 +113,7 @@ Resources:
         AppSyncLoggingExcludeVerbose: True
         UserPoolStack: !Ref UserPoolStackName
         IrradianceCalcLambdaFunctionArn: !GetAtt IrradianceFunc.Arn
+        AprsIrradianceCalcLambdaFunctionArn: !GetAtt IrradianceAPRSFunc.Arn
         DegradationCalcLambdaFunctionArn: !GetAtt DegradationFunc.Arn
       TemplateURL: ./AppSyncStack.yaml
       TimeoutInMinutes: 10
@@ -123,6 +124,9 @@ Outputs:
   IrradianceFunc:
     Description: "Calculate Irradiance Lambda Function ARN"
     Value: !GetAtt IrradianceFunc.Arn
+  AprsIrradianceFunc:
+    Description: "Calculate Irradiance from APRS Stations Lambda Function ARN"
+    Value: !GetAtt IrradianceAPRSFunc.Arn
   DegradationFunc:
     Description: "Calculate Degradation Lambda Function ARN"
     Value: !GetAtt DegradationFunc.Arn
