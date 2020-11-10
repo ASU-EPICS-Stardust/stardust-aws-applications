@@ -6,7 +6,7 @@ input PanelInformation {
 	operationalEfficiency: Float
 	currentIrradiance: Float!
 	stdIrradiance: Float
-	weatherStatus: WeatherStatus
+	weatherStatus: CurrentSkyCondition
 	testTime: AWSTimestamp!
 	testLat: Float!
 	testLon: Float!
@@ -18,9 +18,8 @@ type Query {
 	calculateDegradation(panelInfo: PanelInformation): Float
 }
 
-input WeatherStatus {
-	sunny: Int!
-	overcast: Int!
+enum CurrentSkyCondition {
+	Sunny, Cloudy, PartiallySunny, PartiallyCloudy
 }
 
 schema {

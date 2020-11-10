@@ -1,0 +1,82 @@
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+#      AnalyticsConfigurations:
+#        - AnalyticsConfiguration
+      BucketName: !Sub "{AWS::StackName}-Bucket"
+#      LoggingConfiguration:
+#        LoggingConfiguration
+#      MetricsConfigurations:
+#        - MetricsConfiguration
+      Tags:
+        - Key: Created from Stack
+          Value: !Ref "AWS::StackName"
+#      VersioningConfiguration:
+#        VersioningConfiguration
+#      WebsiteConfiguration:
+#        WebsiteConfiguration
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: PolicyForCloudFrontOAI
+        Statement:
+          - Effect: Allow
+            Principal:
+              CanoncialUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action: "s3:GetObject"
+            Resource: !GetAtt WebsiteBucket.Arn
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "This OAI is used to allow access to the {WebsiteBucket} S3 resource. Created by the
+        {AWS::StackName} stack."
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        # Add CNAMES here if we ever get a domain
+#        Aliases:
+#          - String
+#        CacheBehaviors:
+#          - CacheBehavior
+        Comment: !Sub "Distribution to serve content from {WebsiteBucket}"
+#        CustomErrorResponses:
+#          - CustomErrorResponse
+#        DefaultCacheBehavior:
+#          DefaultCacheBehavior
+        DefaultRootObject: "index.html"
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+#        Logging:
+#          Logging
+#        OriginGroups:
+#          OriginGroups
+        Origins:
+#          - ConnectionAttempts: Integer
+#            ConnectionTimeout: Integer
+            DomainName: !GetAtt WebsiteBucket.DomainName
+            Id: "S3Bucket"
+#            OriginPath: String
+            S3OriginConfig:
+              OriginAccessIdentity: !Ref CloudFrontOAI
+        PriceClass: PriceClass_100
+#        Restrictions:
+#          Restrictions
+#        ViewerCertificate:
+#          ViewerCertificate
+#        WebACLId: String
+#      Tags:
+#        - Tag
+
+Outputs:
+  CloudFrontUrl:
+    Description: The URL for the cloud front ditribution.
+    Value: !GetAtt CloudFrontDistribution.DomainName

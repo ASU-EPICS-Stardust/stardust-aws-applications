@@ -1,3 +1,5 @@
+# Adapted from https://github.com/awslabs/aws-cloudformation-templates/blob/master/aws/services/CloudFormation/MacrosExamples/StringFunctions/string.yaml
+
 Resources:
   TransformExecutionRole:
     Type: AWS::IAM::Role
