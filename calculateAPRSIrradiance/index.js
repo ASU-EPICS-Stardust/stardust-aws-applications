@@ -99,7 +99,8 @@ exports.handler = async function(event, context) {
 
 		let luminosityRegex = /([Ll])(\d{3})/gm
 
-		for (station of stationList) {
+		await Promise.all(stationList.map(
+			(station => (new Promise( async (resolve, reject) => {
 
 			let stationParams = new URLSearchParams([['call', station]])
 
@@ -111,7 +112,7 @@ exports.handler = async function(event, context) {
 			let stationResponse = await got.get("http://www.findu.com/cgi-bin/rawwx.cgi", stationOptions)
 
 			if (stationResponse.body.search(luminosityRegex) == -1) {
-				continue
+				return resolve(true)
 			}
 
 			let [__, magnitudeLabel, lum] = [...stationResponse.body.matchAll(luminosityRegex)].pop()
@@ -132,7 +133,9 @@ exports.handler = async function(event, context) {
 
 			totalWeight += weight
 
-		}
+			return resolve(true)
+
+		})))))
 
         // console.info("Response: " + JSON.stringify(response.body, null, 2));
 
