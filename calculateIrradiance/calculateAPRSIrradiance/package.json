@@ -1,5 +1,5 @@
 {
-  "name": "calculateIrradiance",
+  "name": "calculateAPRSIrradiance",
   "version": "1.0.0",
   "dependencies": {
     "aws-sdk": "^2.773.0",
