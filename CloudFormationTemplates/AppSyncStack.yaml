@@ -83,7 +83,7 @@ Resources:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt AppSyncAPI.ApiId
-      DefinitionS3Location: ./AppSyncConfig/schema.graphql
+      DefinitionS3Location: ../AppSyncConfig/schema.graphql
 
   ## Data Sources
   AppSyncIrradianceFuncDataSourceServiceRole:
@@ -167,8 +167,8 @@ Resources:
       DataSourceName: !GetAtt AppSyncIrradianceFuncDataSource.Name
       FieldName: getIrradianceDataFor
       Kind: UNIT
-      RequestMappingTemplateS3Location: ./AppSyncConfig/GetIrradianceDataRequestResolver.vtl
-      ResponseMappingTemplateS3Location: ./AppSyncConfig/GetIrradianceDataResponseResolver.vtl
+      RequestMappingTemplateS3Location: ../AppSyncConfig/GetIrradianceDataRequestResolver.vtl
+      ResponseMappingTemplateS3Location: ../AppSyncConfig/GetIrradianceDataResponseResolver.vtl
       TypeName: Query
   AppSyncCalcDegradationResolver:
     Type: AWS::AppSync::Resolver
@@ -177,8 +177,8 @@ Resources:
       DataSourceName: !GetAtt AppSyncDegradationCalcFuncDataSource.Name
       FieldName: calculateDegradation
       Kind: UNIT
-      RequestMappingTemplateS3Location: ./AppSyncConfig/CalculateDegradationRequestResolver.vtl
-      ResponseMappingTemplateS3Location: ./AppSyncConfig/CalculateDegradationResponseResolver.vtl
+      RequestMappingTemplateS3Location: ../AppSyncConfig/CalculateDegradationRequestResolver.vtl
+      ResponseMappingTemplateS3Location: ../AppSyncConfig/CalculateDegradationResponseResolver.vtl
       TypeName: Query
 
 Outputs:

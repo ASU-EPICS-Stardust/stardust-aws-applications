@@ -130,4 +130,3 @@ $RECYCLE.BIN/
 /.aws-sam/build/
 /.idea/
 /CloudFormationTemplates/template-packaged.yaml
-/CloudFormationTemplates/template-packaged.yaml
