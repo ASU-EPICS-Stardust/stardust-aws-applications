@@ -79,6 +79,7 @@ Resources:
       CodeUri: calculateAPRSIrradiance/
       Handler: index.handler
       Runtime: nodejs12.x
+      Timeout: 10
       Role: !GetAtt IrradianceFuncIAMRole.Arn
       Environment:
         Variables:
