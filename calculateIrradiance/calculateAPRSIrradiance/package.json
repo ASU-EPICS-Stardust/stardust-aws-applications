@@ -1,9 +1,9 @@
 {
-  "name": "calculateIrradiance",
+  "name": "calculateAPRSIrradiance",
   "version": "1.0.0",
   "dependencies": {
     "aws-sdk": "^2.773.0",
     "got": "~11.7.0",
-    "node-html-parser": "^2.0.0"
+    "node-html-parser": "^1.4.9"
   }
 }

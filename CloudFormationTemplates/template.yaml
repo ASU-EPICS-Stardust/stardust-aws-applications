@@ -73,6 +73,17 @@ Resources:
       Environment:
         Variables:
           Caching_Table_Name: !Ref IrradianceCachingDynamoDBTable
+  IrradianceAPRSFunc:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: calculateAPRSIrradiance/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 10
+      Role: !GetAtt IrradianceFuncIAMRole.Arn
+      Environment:
+        Variables:
+          Caching_Table_Name: !Ref IrradianceCachingDynamoDBTable
   DegradationFunc:
     Type: AWS::Serverless::Function
     Properties:
