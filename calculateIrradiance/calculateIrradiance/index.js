@@ -108,7 +108,7 @@ exports.handler = async function(event, context) {
                 "LatLon": latLonCacheKey,
                 "RequestedLat": event["lat"],
                 "RequestedLon": event["lon"],
-                "Source": "weatherbit",
+                "Source": source,
                 "CachedResponse": resultToCache,
                 "RequestDate": currentTime,
                 "ExpDate": (currentTime + (60 * 30)) // Set the timeout to be 30 min from now
