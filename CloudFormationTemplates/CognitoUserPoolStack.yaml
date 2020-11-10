@@ -3,6 +3,12 @@ Parameters:
   SignInDomain:
     Type: String
     Description: The domain to prepend to the standard sign in url for the user pool
+  WebsiteSignInCallbackURL:
+    Type: String
+    Description: The callback url to use for sign in.
+  WebsiteLogoutCallbackURL:
+    Type: String
+    Description: The callback url to use for user logout.
 
 Resources:
   CognitoUserPool:
@@ -157,17 +163,18 @@ Resources:
 #        RoleArn: String
 #        UserDataShared: Boolean
       CallbackURLs:
-        - "http://localhost"
+        - !Ref WebsiteSignInCallbackURL
+        - !Ref WebsiteLogoutCallbackURL
       ClientName: "Website Client"
-#      DefaultRedirectURI: String
+      DefaultRedirectURI: !Ref WebsiteSignInCallbackURL
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       GenerateSecret: False
       IdTokenValidity: 20
-#      LogoutURLs:
-#        - String
+      LogoutURLs:
+        - !Ref WebsiteLogoutCallbackURL
       PreventUserExistenceErrors: ENABLED
       ReadAttributes:
         - email

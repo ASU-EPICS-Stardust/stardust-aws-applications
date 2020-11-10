@@ -30,7 +30,7 @@ s3_prefix = ""
 region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_NAMED_IAM"
-parameter_overrides = "SignInDomain=\"pv-degradation-pool-dev\""
+parameter_overrides = "SignInDomain=\"pv-degradation-pool-dev\" WebsiteSignInCallbackURL=\"https://dyy2o3vaeht0p.cloudfront.net\" WebsiteLogoutCallbackURL=\"https://dyy2o3vaeht0p.cloudfront.net\""
 
 [website.deploy.parameters]
 stack_name = "Stardust-Website"
