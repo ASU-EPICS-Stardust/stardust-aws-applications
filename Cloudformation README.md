@@ -5,11 +5,14 @@ Config variables for each of these deployments are set in samconfig.toml. You sp
 ## Serverless Resources (main template: template.yaml and AppSyncStack.yaml)
 The template.yaml file is a sam serverless template file and can be deployed using the same cli or toolkit plugin for
  your IDE. Change the --config-env to "prod" if you want to deploy to the Stardust-Production stack.
+
+Sam build needs to be run with these because the AWS::Serverless::Function resources need to be built and their dependencies resolved.
  
 Deployment command:
 ```
-sam package -t "CloudFormationTemplates/template.yaml" --output-template-file "CloudFormationTemplates/template-packaged.yaml" --s3-bucket "stardust-cloudformation-templates" --config-file "samconfig.toml" --config-env "default"
-sam deploy -t "CloudFormationTemplates/template-packaged.yaml" --config-file "samconfig.toml" --config-env "default"
+sam build -t "CloudFormationTemplates/template.yaml" --build-dir ".aws-sam/build"
+sam package -t ".aws-sam/build/template.yaml" --output-template-file ".aws-sam/build/template-packaged.yaml" --s3-bucket "stardust-cloudformation-templates" --config-file "../../CloudFormationTemplates/samconfig.toml" --config-env "default"
+sam deploy -t ".aws-sam/build/template-packaged.yaml" --config-file "../../CloudFormationTemplates/samconfig.toml" --config-env "default"
 ```
 
 ## Cognito User Pool

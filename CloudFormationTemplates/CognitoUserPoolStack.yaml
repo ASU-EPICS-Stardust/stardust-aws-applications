@@ -150,6 +150,7 @@ Resources:
       AccessTokenValidity: 10
       AllowedOAuthFlows:
         - implicit
+        - code
       AllowedOAuthFlowsUserPoolClient: True
       AllowedOAuthScopes:
         - openid
@@ -165,6 +166,7 @@ Resources:
       CallbackURLs:
         - !Ref WebsiteSignInCallbackURL
         - !Ref WebsiteLogoutCallbackURL
+        - "http://localhost:8080"
       ClientName: "Website Client"
       DefaultRedirectURI: !Ref WebsiteSignInCallbackURL
       ExplicitAuthFlows:
@@ -175,6 +177,7 @@ Resources:
       IdTokenValidity: 20
       LogoutURLs:
         - !Ref WebsiteLogoutCallbackURL
+        - "http://localhost:8080"
       PreventUserExistenceErrors: ENABLED
       ReadAttributes:
         - email
