@@ -70,7 +70,7 @@ exports.handler = async function(event, context) {
     } else {
         // MARK: - Make the weatherbit Get request
         //TODO: Store key outside in function config
-        let apiKey = "785160d6e77043b69f6bacabe15921c1"; // This is currently Aaron's personal key
+        let apiKey = "26116e11438f4bcf91bf79eeb0150f6c"; // This is currently Aaron's personal key
 
         let params = new URLSearchParams([['lat', event['lat']], ['lon', event['lon']], ['key', apiKey]]);
 
